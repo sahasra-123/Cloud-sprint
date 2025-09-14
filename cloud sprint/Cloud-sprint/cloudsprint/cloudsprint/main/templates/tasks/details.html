@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>CloudSprint - Task: {{ task.title }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <header>
+        <h1>CloudSprint</h1>
+        <div>
+            <span>Welcome, {{ session.username }}!</span>
+            <a href="{{ url_for('profile') }}">Profile</a>
+            <a href="{{ url_for('logout') }}">Logout</a>
+        </div>
+    </header>
+    <nav>
+        <a href="{{ url_for('dashboard') }}">Dashboard</a>
+        <a href="{{ url_for('projects') }}">Projects</a>
+        <a href="{{ url_for('meetings') }}">Meetings</a>
+        <a href="{{ url_for('notifications') }}">Notifications</a>
+        <a href="{{ url_for('chat') }}">Team Chat</a>
+        {% if session.is_admin %}
+            <a href="{{ url_for('admin_dashboard') }}">Admin Dashboard</a>
+        {% endif %}
+    </nav>
+    <div class="container">
+        <h2>Task: {{ task.title }}</h2>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        
+        <p><strong>Project:</strong> <a href="{{ url_for('project_details', project_id=project.id) }}">{{ project.name }}</a></p>
+        <p><strong>Description:</strong> {{ task.description or 'No description' }}</p>
+        <p><strong>Status:</strong> {{ task.status }}</p>
+        <p><strong>Deadline:</strong> {{ task.deadline.strftime('%Y-%m-%d') }}</p>
+        <p><strong>Category:</strong> {{ task.category.name }}</p>
+        <p><strong>Assigned To:</strong> {{ task.assigned_to.username if task.assigned_to else 'Unassigned' }}</p>
+        
+        <h3>Update Status</h3>
+        <form method="POST" action="{{ url_for('task_details', task_id=task.id) }}">
+            <label for="status">Status:</label>
+            <select id="status" name="status" required>
+                <option value="Not Started" {% if task.status == 'Not Started' %}selected{% endif %}>Not Started</option>
+                <option value="In Progress" {% if task.status == 'In Progress' %}selected{% endif %}>In Progress</option>
+                <option value="On Hold" {% if task.status == 'On Hold' %}selected{% endif %}>On Hold</option>
+                <option value="Completed" {% if task.status == 'Completed' %}selected{% endif %}>Completed</option>
+            </select>
+            
+            <button type="submit">Update Status</button>
+        </form>
+        
+        <h3>Time Logs</h3>
+        <p><a href="{{ url_for('task_timelog', task_id=task.id) }}">Log Time</a></p>
+        {% if timelogs %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Hours</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for timelog in timelogs %}
+                        <tr>
+                            <td>{{ timelog.date.strftime('%Y-%m-%d') }}</td>
+                            <td>{{ timelog.hours }}</td>
+                            <td>{{ timelog.description or 'No description' }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p>No time logs recorded.</p>
+        {% endif %}
+        
+        <h3>Comments</h3>
+        <form method="POST" action="{{ url_for('task_details', task_id=task.id) }}">
+            <label for="comment">Add Comment:</label>
+            <textarea id="comment" name="comment" required></textarea>
+            
+            <button type="submit">Post Comment</button>
+        </form>
+        
+        {% if comments %}
+            <div>
+                {% for comment in comments %}
+                    <p><strong>{{ comment.user.username }}</strong> ({{ comment.timestamp.strftime('%Y-%m-%d %H:%M') }}): {{ comment.content }}</p>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p>No comments yet.</p>
+        {% endif %}
+    </div>
+</body>
+</html>

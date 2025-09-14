@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>CloudSprint - Manage Teams</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <header>
+        <h1>CloudSprint</h1>
+        <div>
+            <span>Welcome, {{ session.username }}!</span>
+            <a href="{{ url_for('profile') }}">Profile</a>
+            <a href="{{ url_for('logout') }}">Logout</a>
+        </div>
+    </header>
+    <nav>
+        <a href="{{ url_for('dashboard') }}">Dashboard</a>
+        <a href="{{ url_for('admin_dashboard') }}">Admin Dashboard</a>
+        <a href="{{ url_for('admin_users') }}">Users</a>
+        <a href="{{ url_for('admin_teams') }}">Teams</a>
+        <a href="{{ url_for('admin_clients') }}">Clients</a>
+        <a href="{{ url_for('admin_projects') }}">Projects</a>
+        <a href="{{ url_for('admin_performance_reviews') }}">Performance Reviews</a>
+    </nav>
+    <div class="container">
+        <h2>Manage Teams</h2>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        
+        <h3>Create New Team</h3>
+        <form method="POST" action="{{ url_for('admin_teams') }}">
+            <label for="name">Team Name:</label>
+            <input type="text" id="name" name="name" required>
+            
+            <label for="description">Description:</label>
+            <textarea id="description" name="description"></textarea>
+            
+            <button type="submit">Create Team</button>
+        </form>
+        
+        <h3>Team List</h3>
+        {% if teams %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Description</th>
+                        <th>Members</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for team in teams %}
+                        <tr>
+                            <td>{{ team.name }}</td>
+                            <td>{{ team.description or 'No description' }}</td>
+                            <td>{{ team.users|length }}</td>
+                            <td>
+                                <a href="{{ url_for('edit_team', team_id=team.id) }}">Edit</a>
+                                <a href="{{ url_for('delete_team', team_id=team.id) }}" onclick="return confirm('Are you sure you want to delete this team?')">Delete</a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p>No teams found.</p>
+        {% endif %}
+    </div>
+</body>
+</html>

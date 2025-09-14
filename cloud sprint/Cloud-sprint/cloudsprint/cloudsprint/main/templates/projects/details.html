@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>CloudSprint - Project: {{ project.name }}</title>
+    <!-- Include Tailwind CSS via CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 font-sans">
+    <header class="bg-blue-600 text-white p-4 flex justify-between items-center shadow-md">
+        <h1 class="text-2xl font-bold">CloudSprint</h1>
+        <div class="flex items-center space-x-4">
+            <span class="text-sm">Welcome, {{ session.username }}!</span>
+            <a href="{{ url_for('profile') }}" class="hover:underline">Profile</a>
+            <a href="{{ url_for('logout') }}" class="hover:underline">Logout</a>
+        </div>
+    </header>
+    <nav class="bg-gray-800 text-white p-4">
+        <div class="flex space-x-4">
+            <a href="{{ url_for('dashboard') }}" class="hover:bg-gray-700 px-3 py-2 rounded">Dashboard</a>
+            <a href="{{ url_for('projects') }}" class="hover:bg-gray-700 px-3 py-2 rounded">Projects</a>
+            <a href="{{ url_for('meetings') }}" class="hover:bg-gray-700 px-3 py-2 rounded">Meetings</a>
+            <a href="{{ url_for('notifications') }}" class="hover:bg-gray-700 px-3 py-2 rounded">Notifications</a>
+            <a href="{{ url_for('chat') }}" class="hover:bg-gray-700 px-3 py-2 rounded">Team Chat</a>
+            {% if session.is_admin %}
+                <a href="{{ url_for('admin_dashboard') }}" class="hover:bg-gray-700 px-3 py-2 rounded">Admin Dashboard</a>
+            {% endif %}
+        </div>
+    </nav>
+    <div class="container mx-auto p-6 max-w-7xl">
+        <h2 class="text-3xl font-semibold text-gray-800 mb-4">Project: {{ project.name }}</h2>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="p-4 mb-4 rounded-lg text-white {{ 'bg-green-500' if category == 'success' else 'bg-red-500' if category == 'error' else 'bg-blue-500' }}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        
+        <div class="bg-white p-6 rounded-lg shadow-md mb-6">
+            <p class="mb-2"><strong>Description:</strong> {{ project.description or 'No description' }}</p>
+            <p class="mb-2"><strong>Client:</strong> {{ project.client.name }} ({{ project.client.company }})</p>
+            <p class="mb-2"><strong>Status:</strong> {{ project.status }}</p>
+            <p class="mb-2"><strong>Start Date:</strong> {{ project.start_date.strftime('%Y-%m-%d') }}</p>
+            <p class="mb-2"><strong>End Date:</strong> {{ project.end_date.strftime('%Y-%m-%d') }}</p>
+        </div>
+        
+        <h3 class="text-xl font-semibold text-gray-800 mb-3">Navigation</h3>
+        <p class="mb-6">
+            <a href="{{ url_for('project_tasks', project_id=project.id) }}" class="text-blue-600 hover:underline">Tasks</a> |
+            <a href="{{ url_for('project_milestones', project_id=project.id) }}" class="text-blue-600 hover:underline">Milestones</a> |
+            <a href="{{ url_for('project_risks', project_id=project.id) }}" class="text-blue-600 hover:underline">Risks</a> |
+            <a href="{{ url_for('project_resources', project_id=project.id) }}" class="text-blue-600 hover:underline">Resources</a> |
+            <a href="{{ url_for('project_progress_report', project_id=project.id) }}" class="text-blue-600 hover:underline">Submit Progress Report</a> |
+            <a href="{{ url_for('project_budget', project_id=project.id) }}" class="text-blue-600 hover:underline">Budget</a> |
+            <a href="{{ url_for('project_files', project_id=project.id) }}" class="text-blue-600 hover:underline">Files</a> |
+            <a href="{{ url_for('schedule_meeting', project_id=project.id) }}" class="text-blue-600 hover:underline">Schedule Meeting</a>
+        </p>
+        
+        <h3 class="text-xl font-semibold text-gray-800 mb-3">Team Members</h3>
+        {% if team_members %}
+            <ul class="list-disc pl-5 mb-6">
+                {% for member in team_members %}
+                    <li class="text-gray-700">{{ member.username }}</li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p class="text-gray-600 mb-6">No team members assigned.</p>
+        {% endif %}
+        
+        <h3 class="text-xl font-semibold text-gray-800 mb-3">Tasks Overview</h3>
+        {% if tasks %}
+            <div class="overflow-x-auto mb-6">
+                <table class="min-w-full bg-white rounded-lg shadow-md">
+                    <thead class="bg-gray-200">
+                        <tr>
+                            <th class="px-4 py-2 text-left text-gray-600">Title</th>
+                            <th class="px-4 py-2 text-left text-gray-600">Status</th>
+                            <th class="px-4 py-2 text-left text-gray-600">Deadline</th>
+                            <th class="px-4 py-2 text-left text-gray-600">Assigned To</th>
+                            <th class="px-4 py-2 text-left text-gray-600">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for task in tasks %}
+                            <tr class="border-t">
+                                <td class="px-4 py-2">{{ task.title }}</td>
+                                <td class="px-4 py-2">{{ task.status }}</td>
+                                <td class="px-4 py-2">{{ task.deadline.strftime('%Y-%m-%d') }}</td>
+                                <td class="px-4 py-2">{{ task.assigned_to.username if task.assigned_to else 'Unassigned' }}</td>
+                                <td class="px-4 py-2">
+                                    <a href="{{ url_for('task_details', task_id=task.id) }}" class="text-blue-600 hover:underline">View</a>
+                                    {% if session.is_admin %}
+                                        <a href="{{ url_for('task_risk_assessment', project_id=project.id, task_id=task.id) }}" class="text-blue-600 hover:underline ml-2">Add Risk</a>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <p class="text-gray-600 mb-6">No tasks found.</p>
+        {% endif %}
+        
+        <h3 class="text-xl font-semibold text-gray-800 mb-3">Budget</h3>
+        {% if budget %}
+            <div class="bg-white p-6 rounded-lg shadow-md mb-6">
+                <p class="mb-2">Total Budget: ${{ budget.total_budget }}</p>
+                <p class="mb-2">Used Amount: ${{ budget.used_amount }}</p>
+                <p class="mb-2">Remaining Amount: ${{ budget.remaining_amount }}</p>
+                <p class="mb-2">Last Updated: {{ budget.last_updated.strftime('%Y-%m-%d %H:%M') }}</p>
+            </div>
+        {% else %}
+            <p class="text-gray-600 mb-6">No budget set for this project.</p>
+        {% endif %}
+        
+        <h3 class="text-xl font-semibold text-gray-800 mb-3">Milestones</h3>
+        {% if milestones %}
+            <div class="overflow-x-auto mb-6">
+                <table class="min-w-full bg-white rounded-lg shadow-md">
+                    <thead class="bg-gray-200">
+                        <tr>
+                            <th class="px-4 py-2 text-left text-gray-600">Title</th>
+                            <th class="px-4 py-2 text-left text-gray-600">Status</th>
+                            <th class="px-4 py-2 text-left text-gray-600">Deadline</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for milestone in milestones %}
+                            <tr class="border-t">
+                                <td class="px-4 py-2">{{ milestone.title }}</td>
+                                <td class="px-4 py-2">{{ milestone.status }}</td>
+                                <td class="px-4 py-2">{{ milestone.deadline.strftime('%Y-%m-%d') }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <p class="text-gray-600 mb-6">No milestones found.</p>
+        {% endif %}
+        
+        <h3 class="text-xl font-semibold text-gray-800 mb-3">Risk Assessments</h3>
+        {% if risk_assessments %}
+            <div class="overflow-x-auto mb-6">
+                <table class="min-w-full bg-white rounded-lg shadow-md">
+                    <thead class="bg-gray-200">
+                        <tr>
+                            <th class="px-4 py-2 text-left text-gray-600">Risk Title</th>
+                            <th class="px-4 py-2 text-left text-gray-600">Severity</th>
+                            <th class="px-4 py-2 text-left text-gray-600">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for risk in risk_assessments %}
+                            <tr class="border-t">
+                                <td class="px-4 py-2">{{ risk.risk_title }}</td>
+                                <td class="px-4 py-2">{{ risk.severity }}</td>
+                                <td class="px-4 py-2">{{ risk.status }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <p class="text-gray-600 mb-6">No risks identified.</p>
+        {% endif %}
+        
+        <h3 class="text-xl font-semibold text-gray-800 mb-3">Progress Reports</h3>
+        {% if progress_reports %}
+            <div class="overflow-x-auto mb-6">
+                <table class="min-w-full bg-white rounded-lg shadow-md">
+                    <thead class="bg-gray-200">
+                        <tr>
+                            <th class="px-4 py-2 text-left text-gray-600">Date</th>
+                            <th class="px-4 py-2 text-left text-gray-600">Progress Rate</th>
+                            <th class="px-4 py-2 text-left text-gray-600">Details</th>
+                            <th class="px-4 py-2 text-left text-gray-600">Submitted By</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for report in progress_reports %}
+                            <tr class="border-t">
+                                <td class="px-4 py-2">{{ report.report_date.strftime('%Y-%m-%d') }}</td>
+                                <td class="px-4 py-2">{{ report.progress_rate }}%</td>
+                                <td class="px-4 py-2">{{ report.details }}</td>
+                                <td class="px-4 py-2">{{ report.submitter.username }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <p class="text-gray-600 mb-6">No progress reports submitted.</p>
+        {% endif %}
+        
+        <h3 class="text-xl font-semibold text-gray-800 mb-3">Files</h3>
+        {% if files %}
+            <div class="overflow-x-auto mb-6">
+                <table class="min-w-full bg-white rounded-lg shadow-md">
+                    <thead class="bg-gray-200">
+                        <tr>
+                            <th class="px-4 py-2 text-left text-gray-600">Filename</th>
+                            <th class="px-4 py-2 text-left text-gray-600">Type</th>
+                            <th class="px-4 py-2 text-left text-gray-600">Uploaded By</th>
+                            <th class="px-4 py-2 text-left text-gray-600">Upload Date</th>
+                            <th class="px-4 py-2 text-left text-gray-600">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for file in files %}
+                            <tr class="border-t">
+                                <td class="px-4 py-2">{{ file.filename }}</td>
+                                <td class="px-4 py-2">{{ file.file_type }}</td>
+                                <td class="px-4 py-2">{{ file.uploader.username }}</td>
+                                <td class="px-4 py-2">{{ file.upload_date.strftime('%Y-%m-%d') }}</td>
+                                <td class="px-4 py-2">
+                                    <a href="{{ url_for('download_file', filename=file.file_path) }}" class="text-blue-600 hover:underline">Download</a>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <p class="text-gray-600 mb-6">No files uploaded.</p>
+        {% endif %}
+        
+        <h3 class="text-xl font-semibold text-gray-800 mb-3">Status Updates</h3>
+        {% if status_updates %}
+            <div class="overflow-x-auto mb-6">
+                <table class="min-w-full bg-white rounded-lg shadow-md">
+                    <thead class="bg-gray-200">
+                        <tr>
+                            <th class="px-4 py-2 text-left text-gray-600">Status</th>
+                            <th class="px-4 py-2 text-left text-gray-600">Update Date</th>
+                            <th class="px-4 py-2 text-left text-gray-600">Comments</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for update in status_updates %}
+                            <tr class="border-t">
+                                <td class="px-4 py-2">{{ update.status }}</td>
+                                <td class="px-4 py-2">{{ update.update_date.strftime('%Y-%m-%d') }}</td>
+                                <td class="px-4 py-2">{{ update.comments or 'No comments' }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <p class="text-gray-600 mb-6">No status updates.</p>
+        {% endif %}
+    </div>
+</body>
+</html>

@@ -1,0 +1,222 @@
+{% extends "base.html" %}
+
+{% block title %}CloudSprint - Dashboard{% endblock %}
+
+{% block content %}
+<div class="bg-white shadow-md rounded-lg p-6">
+    <h1 class="text-2xl font-bold text-gray-800 mb-6">Dashboard</h1>
+    
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="mb-4 p-4 rounded-md {% if category == 'success' %}bg-green-50 text-green-800 border border-green-200{% elif category == 'error' %}bg-red-50 text-red-800 border border-red-200{% else %}bg-blue-50 text-blue-800 border border-blue-200{% endif %}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+    
+    <!-- Dashboard Overview -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div class="bg-blue-50 p-4 rounded-lg border border-blue-100">
+            <div class="flex items-center space-x-3">
+                <div class="bg-blue-100 p-3 rounded-full">
+                    <svg class="h-6 w-6 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                    </svg>
+                </div>
+                <div>
+                    <p class="text-sm text-blue-600 font-medium">Active Projects</p>
+                    <h3 class="text-2xl font-bold">{{ projects|length }}</h3>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bg-green-50 p-4 rounded-lg border border-green-100">
+            <div class="flex items-center space-x-3">
+                <div class="bg-green-100 p-3 rounded-full">
+                    <svg class="h-6 w-6 text-green-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                </div>
+                <div>
+                    <p class="text-sm text-green-600 font-medium">Completed Tasks</p>
+                    <h3 class="text-2xl font-bold">{{ tasks|selectattr('status', 'equalto', 'Completed')|list|length }}</h3>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bg-amber-50 p-4 rounded-lg border border-amber-100">
+            <div class="flex items-center space-x-3">
+                <div class="bg-amber-100 p-3 rounded-full">
+                    <svg class="h-6 w-6 text-amber-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                </div>
+                <div>
+                    <p class="text-sm text-amber-600 font-medium">Pending Tasks</p>
+                    <h3 class="text-2xl font-bold">{{ tasks|selectattr('status', 'equalto', 'Pending')|list|length }}</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Notifications -->
+    <div class="mb-8">
+        <div class="flex items-center justify-between mb-4">
+            <h2 class="text-lg font-semibold text-gray-700">Your Notifications</h2>
+            <a href="{{ url_for('notifications') }}" class="text-blue-600 hover:text-blue-800 text-sm font-medium">View All</a>
+        </div>
+        
+        {% if notifications %}
+            <div class="bg-white border rounded-lg overflow-hidden">
+                {% for notification in notifications[:5] %}
+                    <div class="p-4 {% if not loop.last %}border-b border-gray-100{% endif %} {% if not notification.is_read %}bg-blue-50{% endif %}">
+                        <div class="flex items-start space-x-3">
+                            <div class="{% if notification.notification_type == 'task' %}text-blue-500{% elif notification.notification_type == 'meeting' %}text-purple-500{% elif notification.notification_type == 'project' %}text-green-500{% else %}text-gray-500{% endif %}">
+                                {% if notification.notification_type == 'task' %}
+                                    <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                        <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" />
+                                        <path fill-rule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" clip-rule="evenodd" />
+                                    </svg>
+                                {% elif notification.notification_type == 'meeting' %}
+                                    <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd" />
+                                    </svg>
+                                {% else %}
+                                    <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                        <path d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6z" />
+                                        <path d="M10 18a3 3 0 01-3-3h6a3 3 0 01-3 3z" />
+                                    </svg>
+                                {% endif %}
+                            </div>
+                            <div class="flex-1">
+                                <p class="text-sm text-gray-800">{{ notification.message }}</p>
+                                <p class="text-xs text-gray-500 mt-1">{{ notification.timestamp.strftime('%Y-%m-%d %H:%M') }}</p>
+                            </div>
+                            {% if not notification.is_read %}
+                                <a href="{{ url_for('mark_notification', notification_id=notification.id) }}" class="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full">Mark as Read</a>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="bg-gray-50 border border-gray-200 rounded-lg p-6 text-center">
+                <p class="text-gray-500">No new notifications</p>
+            </div>
+        {% endif %}
+    </div>
+    
+    
+    <!-- Projects -->
+    <div>
+        <div class="flex items-center justify-between mb-4">
+            <h2 class="text-lg font-semibold text-gray-700">Your Projects</h2>
+            <a href="{{ url_for('projects') }}" class="text-blue-600 hover:text-blue-800 text-sm font-medium">View All</a>
+        </div>
+        
+        {% if projects %}
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {% for project in projects %}
+                    <div class="bg-white border rounded-lg overflow-hidden hover:shadow-md transition-shadow duration-300">
+                        <div class="p-4 border-b {% if project.status == 'Completed' %}bg-green-50 border-green-100{% elif project.status == 'In Progress' %}bg-blue-50 border-blue-100{% else %}bg-yellow-50 border-yellow-100{% endif %}">
+                            <h3 class="font-medium text-gray-800">{{ project.name }}</h3>
+                            <p class="text-sm text-gray-500">{{ project.client.name }} ({{ project.client.company }})</p>
+                        </div>
+                        <div class="p-4">
+                            <div class="flex justify-between text-sm mb-2">
+                                <span class="text-gray-500">Status:</span>
+                                <span class="font-medium {% if project.status == 'Completed' %}text-green-600{% elif project.status == 'In Progress' %}text-blue-600{% else %}text-yellow-600{% endif %}">{{ project.status }}</span>
+                            </div>
+                            <div class="flex justify-between text-sm mb-2">
+                                <span class="text-gray-500">Start Date:</span>
+                                <span class="text-gray-700">{{ project.start_date.strftime('%Y-%m-%d') }}</span>
+                            </div>
+                            <div class="flex justify-between text-sm mb-2">
+                                <span class="text-gray-500">End Date:</span>
+                                <span class="text-gray-700">{{ project.end_date.strftime('%Y-%m-%d') }}</span>
+                            </div>
+                            <div class="flex justify-between text-sm mb-2">
+                                <span class="text-gray-500">Progress:</span>
+                                <span class="text-gray-700">
+                                    {% set completed_tasks = project.tasks|selectattr('status', 'equalto', 'Completed')|list|length %}
+                                    {% set total_tasks = project.tasks|length %}
+                                    {% if total_tasks > 0 %}
+                                        {{ (completed_tasks / total_tasks * 100)|int }}%
+                                    {% else %}
+                                        0%
+                                    {% endif %}
+                                </span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-2.5 mb-4">
+                                <div class="{% if project.status == 'Completed' %}bg-green-600{% elif project.status == 'In Progress' %}bg-blue-600{% else %}bg-yellow-600{% endif %} h-2.5 rounded-full" style="width: {% if total_tasks > 0 %}{{ (completed_tasks / total_tasks * 100)|int }}{% else %}0{% endif %}%"></div>
+                            </div>
+                            <div class="text-right">
+                                <a href="{{ url_for('project_details', project_id=project.id) }}" class="inline-flex items-center px-3 py-1 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                    View Details
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="bg-gray-50 border border-gray-200 rounded-lg p-6 text-center">
+                <p class="text-gray-500">You are not assigned to any projects</p>
+            </div>
+        {% endif %}
+    </div>
+    
+    <!-- Upcoming Meetings -->
+    <div class="mt-8">
+        <div class="flex items-center justify-between mb-4">
+            <h2 class="text-lg font-semibold text-gray-700">Upcoming Meetings</h2>
+            <a href="{{ url_for('meetings') }}" class="text-blue-600 hover:text-blue-800 text-sm font-medium">View All</a>
+        </div>
+        
+        {% if meetings %}
+            <div class="bg-white border rounded-lg overflow-hidden">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Title</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Project</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date & Time</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Duration</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        {% for meeting in meetings %}
+                            <tr>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-sm font-medium text-gray-900">{{ meeting.title }}</div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-sm text-gray-500">{{ meeting.project.name }}</div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    {{ meeting.datetime.strftime('%Y-%m-%d %H:%M') }}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    {{ meeting.duration }} minutes
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                    <a href="{{ url_for('meeting_details', meeting_id=meeting.id) }}" class="text-blue-600 hover:text-blue-900 mr-3">View</a>
+                                    <a href="{{ meeting.meeting_link }}" target="_blank" class="text-green-600 hover:text-green-900">Join</a>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="bg-gray-50 border border-gray-200 rounded-lg p-6 text-center">
+                <p class="text-gray-500">No upcoming meetings</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Files - {{ project.name }} - CloudSprint</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container mt-5">
+        <h1 class="mb-4">Files for {{ project.name }}</h1>
+
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <!-- Upload Form -->
+        <form method="POST" enctype="multipart/form-data" action="{{ url_for('project_files', project_id=project.id) }}">
+            <div class="mb-3">
+                <label for="file" class="form-label">Upload File</label>
+                <input type="file" class="form-control" id="file" name="file" required>
+            </div>
+            <div class="mb-3">
+                <label for="share_with" class="form-label">Share With</label>
+                <select class="form-select" id="share_with" name="share_with" multiple>
+                    {% for member in team_members %}
+                        <option value="{{ member.id }}">{{ member.username }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <button type="submit" class="btn btn-primary">Upload</button>
+        </form>
+
+        <!-- Uploaded Files -->
+        <h2 class="mt-4">Uploaded Files</h2>
+        {% if files %}
+            <ul class="list-group mb-4">
+                {% for file in files %}
+                    <li class="list-group-item">
+                        {{ file.filename }} (Uploaded: {{ file.upload_date.strftime('%Y-%m-%d %H:%M') }} by {{ file.uploader.username }})
+                        <a href="{{ url_for('download_file', filename=file.file_path) }}" class="btn btn-sm btn-success">Download</a>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p class="text-muted">No files uploaded.</p>
+        {% endif %}
+
+        <!-- Shared Files -->
+        <h2>Shared Files</h2>
+        {% if shared_files %}
+            <ul class="list-group mb-4">
+                {% for file in shared_files %}
+                    <li class="list-group-item">
+                        {{ file.filename }} (Shared: {{ file.upload_date.strftime('%Y-%m-%d %H:%M') }})
+                        <a href="{{ url_for('download_file', filename=file.file_path) }}" class="btn btn-sm btn-success">Download</a>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p class="text-muted">No shared files.</p>
+        {% endif %}
+
+        <a href="{{ url_for('project_details', project_id=project.id) }}" class="btn btn-secondary mt-3">Back to Project</a>
+        <a href="{{ url_for('file_summary', project_id=project.id) }}" class="btn btn-info mt-3">View Summary</a>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CloudSprint</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        
+        .sidebar-icon {
+            @apply relative flex items-center justify-center h-12 w-12 mt-2 mb-2 mx-auto shadow-lg
+            bg-gray-800 text-blue-500 hover:bg-blue-600 hover:text-white
+            rounded-3xl hover:rounded-xl transition-all duration-300 ease-linear cursor-pointer;
+        }
+        
+        .sidebar-tooltip {
+            @apply absolute w-auto p-2 m-2 min-w-max left-14 rounded-md shadow-md
+            text-white bg-gray-900 text-xs font-bold transition-all duration-100 scale-0 origin-left;
+        }
+        
+        .sidebar-hr {
+            @apply bg-gray-200 dark:bg-gray-800 border border-gray-200 dark:border-gray-800 rounded-full mx-2;
+        }
+        
+        .top-navigation {
+            @apply flex flex-row items-center justify-evenly bg-gray-300 dark:bg-gray-700 bg-opacity-90 w-full h-16 m-0 shadow-lg;
+        }
+        
+        .content-container {
+            @apply flex flex-col bg-gray-100 dark:bg-gray-700 m-0 h-full w-full overflow-hidden;
+        }
+        
+        .content-list {
+            @apply flex flex-col items-center h-full w-full mt-0 pb-12 overflow-y-scroll;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 h-screen flex overflow-hidden">
+    <!-- Sidebar -->
+    <div class="fixed inset-y-0 left-0 bg-white w-64 shadow-lg flex flex-col z-10">
+        <!-- Logo -->
+        <div class="flex items-center justify-center h-16 border-b">
+            <h1 class="text-2xl font-bold text-blue-600">CloudSprint</h1>
+        </div>
+        
+        <!-- Navigation -->
+        <nav class="px-2 py-4 flex-grow">
+            <p class="text-gray-400 text-xs font-semibold uppercase tracking-wider mb-2 px-3">Main</p>
+            <a href="{{ url_for('dashboard') }}" class="flex items-center space-x-3 text-gray-700 p-3 rounded-md hover:bg-gray-100 mb-1">
+                <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                    <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" />
+                </svg>
+                <span>Dashboard</span>
+            </a>
+            <a href="{{ url_for('projects') }}" class="flex items-center space-x-3 text-gray-700 p-3 rounded-md hover:bg-gray-100 mb-1">
+                <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M3 5a2 2 0 012-2h10a2 2 0 012 2v10a2 2 0 01-2 2H5a2 2 0 01-2-2V5zm11 1H6v8l4-2 4 2V6z" clip-rule="evenodd" />
+                </svg>
+                <span>Projects</span>
+            </a>
+            <a href="{{ url_for('meetings') }}" class="flex items-center space-x-3 text-gray-700 p-3 rounded-md hover:bg-gray-100 mb-1">
+                <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd" />
+                </svg>
+                <span>Meetings</span>
+            </a>
+            <a href="{{ url_for('notifications') }}" class="flex items-center space-x-3 text-gray-700 p-3 rounded-md hover:bg-gray-100 mb-1">
+                <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                    <path d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6zM10 18a3 3 0 01-3-3h6a3 3 0 01-3 3z" />
+                </svg>
+                <span>Notifications</span>
+            </a>
+            <a href="{{ url_for('chat') }}" class="flex items-center space-x-3 text-gray-700 p-3 rounded-md hover:bg-gray-100 mb-1">
+                <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z" clip-rule="evenodd" />
+                </svg>
+                <span>Team Chat</span>
+            </a>
+            <a href="{{ url_for('timesheet') }}" class="flex items-center space-x-3 text-gray-700 p-3 rounded-md hover:bg-gray-100 mb-1">
+                <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd" />
+                </svg>
+                <span>Timesheet</span>
+            </a>
+            
+            {% if session.is_admin %}
+            <p class="text-gray-400 text-xs font-semibold uppercase tracking-wider mt-6 mb-2 px-3">Admin</p>
+            <a href="{{ url_for('admin_dashboard') }}" class="flex items-center space-x-3 text-gray-700 p-3 rounded-md hover:bg-gray-100 mb-1">
+                <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd" />
+                </svg>
+                <span>Admin Dashboard</span>
+            </a>
+            {% endif %}
+        </nav>
+        
+        <!-- Logout -->
+        <div class="px-4 py-2 border-t mt-auto">
+            <a href="{{ url_for('logout') }}" class="flex items-center space-x-3 text-red-500 p-3 rounded-md hover:bg-red-50">
+                <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 001 1h12a1 1 0 001-1V4a1 1 0 00-1-1H3zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z" clip-rule="evenodd" />
+                </svg>
+                <span>Logout</span>
+            </a>
+        </div>
+    </div>
+    
+    <!-- Main Content -->
+    <div class="flex-1 ml-64 p-8">
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="mb-4 {% if category == 'error' %}bg-red-100 border border-red-400 text-red-700{% elif category == 'success' %}bg-green-100 border border-green-400 text-green-700{% else %}bg-blue-100 border border-blue-400 text-blue-700{% endif %} px-4 py-3 rounded relative" role="alert">
+                        <span class="block sm:inline">{{ message }}</span>
+                        <button type="button" class="absolute top-0 bottom-0 right-0 px-4 py-3" onclick="this.parentElement.style.display='none'">
+                            <svg class="fill-current h-6 w-6" role="button" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                                <title>Close</title>
+                                <path d="M14.348 14.849a1.2 1.2 0 0 1-1.697 0L10 11.819l-2.651 3.029a1.2 1.2 0 1 1-1.697-1.697l2.758-3.15-2.759-3.152a1.2 1.2 0 1 1 1.697-1.697L10 8.183l2.651-3.031a1.2 1.2 0 1 1 1.697 1.697l-2.758 3.152 2.758 3.15a1.2 1.2 0 0 1 0 1.698z"/>
+                            </svg>
+                        </button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        
+        <!-- Page content placeholder -->
+        <div class="bg-white shadow-md rounded-lg p-6">
+            <h1 class="text-2xl font-bold text-gray-800 mb-6">{% block title %}Dashboard{% endblock %}</h1>
+            
+            <!-- Content blocks -->
+            {% block content %}
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Notifications Card -->
+                <div class="bg-white border rounded-lg shadow p-4">
+                    <div class="flex items-center justify-between mb-4">
+                        <h2 class="text-lg font-semibold text-gray-700">Recent Notifications</h2>
+                        <a href="{{ url_for('notifications') }}" class="text-blue-500 hover:text-blue-700 text-sm">View All</a>
+                    </div>
+                    {% if notifications %}
+                        <ul class="space-y-3">
+                            {% for notification in notifications[:3] %}
+                                <li class="{% if not notification.is_read %}bg-blue-50{% endif %} p-2 rounded">
+                                    <p class="text-sm">{{ notification.message }}</p>
+                                    <p class="text-xs text-gray-500 mt-1">{{ notification.timestamp.strftime('%Y-%m-%d %H:%M') }}</p>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    {% else %}
+                        <p class="text-gray-500 text-sm">No new notifications.</p>
+                    {% endif %}
+                </div>
+                
+                <!-- Tasks Card -->
+                <div class="bg-white border rounded-lg shadow p-4">
+                    <div class="flex items-center justify-between mb-4">
+                        <h2 class="text-lg font-semibold text-gray-700">Your Tasks</h2>
+                        <a href="#" class="text-blue-500 hover:text-blue-700 text-sm">View All</a>
+                    </div>
+                    {% if tasks %}
+                        <ul class="space-y-2">
+                            {% for task in tasks[:4] %}
+                                <li class="border-l-4 {% if task.status == 'Completed' %}border-green-500{% elif task.status == 'In Progress' %}border-blue-500{% else %}border-yellow-500{% endif %} pl-3 py-1">
+                                    <p class="text-sm font-medium">{{ task.title }}</p>
+                                    <p class="text-xs text-gray-500">{{ task.project.name }} • Due {{ task.deadline.strftime('%Y-%m-%d') }}</p>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    {% else %}
+                        <p class="text-gray-500 text-sm">No tasks assigned to you.</p>
+                    {% endif %}
+                </div>
+                
+                <!-- Projects Card -->
+                <div class="bg-white border rounded-lg shadow p-4">
+                    <div class="flex items-center justify-between mb-4">
+                        <h2 class="text-lg font-semibold text-gray-700">Your Projects</h2>
+                        <a href="{{ url_for('projects') }}" class="text-blue-500 hover:text-blue-700 text-sm">View All</a>
+                    </div>
+                    {% if projects %}
+                        <ul class="space-y-2">
+                            {% for project in projects[:3] %}
+                                <li class="flex items-center space-x-3 py-2 border-b border-gray-100 last:border-b-0">
+                                    <div class="bg-blue-100 text-blue-800 rounded-full h-8 w-8 flex items-center justify-center font-medium">
+                                        {{ project.name[0] }}
+                                    </div>
+                                    <div>
+                                        <p class="text-sm font-medium">{{ project.name }}</p>
+                                        <p class="text-xs text-gray-500">{{ project.status }}</p>
+                                    </div>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    {% else %}
+                        <p class="text-gray-500 text-sm">You are not assigned to any projects.</p>
+                    {% endif %}
+                </div>
+            </div>
+            {% endblock %}
+        </div>
+    </div>
+</body>
+</html>

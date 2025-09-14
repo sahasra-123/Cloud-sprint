@@ -1,0 +1,379 @@
+{% extends "base.html" %}
+
+{% block title %}Timesheet - CloudSprint{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row mb-4">
+        <div class="col">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="mb-0">Timesheet</h1>
+                    <p class="text-muted">{{ user.username }}</p>
+                </div>
+                <div>
+                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addTimelogModal">
+                        <i class="bi bi-plus-circle"></i> Log Time
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <!-- Timesheet Summary Cards -->
+    <div class="row mb-4">
+        <div class="col-md-4 mb-3">
+            <div class="card summary-card">
+                <div class="card-body">
+                    <h6 class="card-subtitle mb-2 text-muted">Total Hours This Week</h6>
+                    <h2 class="card-title">{{ timelogs|sum(attribute='hours') if timelogs else 0 }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-3">
+            <div class="card summary-card">
+                <div class="card-body">
+                    <h6 class="card-subtitle mb-2 text-muted">Projects Active</h6>
+                    <h2 class="card-title">{{ timelogs|map(attribute='project')|map(attribute='name')|unique|list|length if timelogs else 0 }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-3">
+            <div class="card summary-card">
+                <div class="card-body">
+                    <h6 class="card-subtitle mb-2 text-muted">Latest Entry</h6>
+                    <h2 class="card-title">{{ timelogs[0].date.strftime('%b %d') if timelogs else 'N/A' }}</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filter Controls -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form id="filter-form" class="row g-3">
+                <div class="col-md-4">
+                    <label for="project-filter" class="form-label">Project</label>
+                    <select class="form-select" id="project-filter">
+                        <option value="">All Projects</option>
+                        {% if timelogs %}
+                            {% for project in timelogs|map(attribute='project')|unique %}
+                                <option value="{{ project.name }}">{{ project.name }}</option>
+                            {% endfor %}
+                        {% endif %}
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label for="date-range" class="form-label">Date Range</label>
+                    <select class="form-select" id="date-range">
+                        <option value="week">This Week</option>
+                        <option value="month">This Month</option>
+                        <option value="all" selected>All Time</option>
+                    </select>
+                </div>
+                <div class="col-md-4 d-flex align-items-end">
+                    <button type="button" class="btn btn-outline-secondary w-100" id="filter-button">
+                        <i class="bi bi-funnel"></i> Apply Filters
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Timelogs Table -->
+    <div class="card timesheet-card">
+        <div class="card-header bg-white">
+            <div class="d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Time Entries</h5>
+                <div class="btn-group">
+                    <button type="button" class="btn btn-sm btn-outline-secondary">
+                        <i class="bi bi-download"></i> Export
+                    </button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary">
+                        <i class="bi bi-printer"></i> Print
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            {% if timelogs %}
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="sortable" data-sort="project">Project <i class="bi bi-arrow-down-up"></i></th>
+                                <th class="sortable" data-sort="task">Task <i class="bi bi-arrow-down-up"></i></th>
+                                <th class="sortable" data-sort="date">Date <i class="bi bi-arrow-down-up"></i></th>
+                                <th class="sortable" data-sort="hours">Hours <i class="bi bi-arrow-down-up"></i></th>
+                                <th>Description</th>
+                                <th class="text-end">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for timelog in timelogs %}
+                                <tr class="timelog-row" data-project="{{ timelog.project.name }}">
+                                    <td>
+                                        <span class="project-badge" style="background-color: {{ '#%02x%02x%02x' | format(((loop.index0 * 100) % 255), ((loop.index0 * 50) % 255), ((loop.index0 * 150) % 255)) }}"></span>
+                                        {{ timelog.project.name }}
+                                    </td>
+                                    <td>{{ timelog.task.title }}</td>
+                                    <td>{{ timelog.date.strftime('%b %d, %Y') }}</td>
+                                    <td>{{ timelog.hours }}</td>
+                                    <td>
+                                        {% if timelog.description %}
+                                            <span class="description-text">{{ timelog.description }}</span>
+                                        {% else %}
+                                            <span class="text-muted">N/A</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-end">
+                                        <button class="btn btn-sm btn-outline-primary" data-bs-toggle="tooltip" data-bs-title="Edit">
+                                            <i class="bi bi-pencil"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-outline-danger" data-bs-toggle="tooltip" data-bs-title="Delete">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                        <tfoot class="table-light">
+                            <tr>
+                                <td colspan="3" class="text-end fw-bold">Total Hours:</td>
+                                <td class="fw-bold">{{ timelogs|sum(attribute='hours') }}</td>
+                                <td colspan="2"></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            {% else %}
+                <div class="empty-state text-center py-5">
+                    <i class="bi bi-clock-history empty-icon"></i>
+                    <h4>No time entries yet</h4>
+                    <p class="text-muted">Start logging your time by clicking the "Log Time" button above.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="d-flex justify-content-end mt-4">
+        <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Back to Dashboard
+        </a>
+    </div>
+</div>
+
+<!-- Add Timelog Modal -->
+<div class="modal fade" id="addTimelogModal" tabindex="-1" aria-labelledby="addTimelogModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addTimelogModalLabel">Log Time</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block styles %}
+{{ super() }}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+<style>
+    .summary-card {
+        border-radius: 12px;
+        border: none;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    
+    .summary-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+    }
+    
+    .summary-card .card-title {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin-top: 0.5rem;
+        color: #0d6efd;
+    }
+    
+    .timesheet-card {
+        border-radius: 12px;
+        border: none;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        overflow: hidden;
+    }
+    
+    .timesheet-card .card-header {
+        border-bottom: 1px solid #e9ecef;
+        padding: 1rem 1.5rem;
+    }
+    
+    .table th {
+        font-weight: 600;
+        font-size: 0.9rem;
+        padding: 1rem 1.5rem;
+    }
+    
+    .table td {
+        padding: 1rem 1.5rem;
+        vertical-align: middle;
+    }
+    
+    .sortable {
+        cursor: pointer;
+    }
+    
+    .sortable i {
+        font-size: 0.8rem;
+        margin-left: 5px;
+        opacity: 0.5;
+    }
+    
+    .sortable:hover i {
+        opacity: 1;
+    }
+    
+    .project-badge {
+        display: inline-block;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        margin-right: 8px;
+    }
+    
+    .description-text {
+        display: block;
+        max-width: 200px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    
+    .description-text:hover {
+        white-space: normal;
+        overflow: visible;
+    }
+    
+    .empty-state {
+        padding: 3rem 0;
+    }
+    
+    .empty-icon {
+        font-size: 3.5rem;
+        color: #adb5bd;
+        display: block;
+        margin-bottom: 1.5rem;
+    }
+    
+    .timelog-row:hover {
+        background-color: rgba(13, 110, 253, 0.05);
+    }
+    
+    @media (max-width: 768px) {
+        .description-text {
+            max-width: 100px;
+        }
+        
+        .table td, .table th {
+            padding: 0.75rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize tooltips
+        const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+        const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl));
+        
+        // Set default date in modal to today
+        document.getElementById('date').valueAsDate = new Date();
+        
+        // Filter functionality
+        document.getElementById('filter-button').addEventListener('click', function() {
+            const projectFilter = document.getElementById('project-filter').value;
+            const dateRange = document.getElementById('date-range').value;
+            
+            document.querySelectorAll('.timelog-row').forEach(row => {
+                const project = row.getAttribute('data-project');
+                let showRow = true;
+                
+                if (projectFilter && project !== projectFilter) {
+                    showRow = false;
+                }
+                
+                // Add date filtering logic here when needed
+                
+                row.style.display = showRow ? '' : 'none';
+            });
+        });
+        
+        // Sorting functionality
+        document.querySelectorAll('.sortable').forEach(header => {
+            header.addEventListener('click', function() {
+                const sortBy = this.getAttribute('data-sort');
+                const table = this.closest('table');
+                const tbody = table.querySelector('tbody');
+                const rows = Array.from(tbody.querySelectorAll('tr'));
+                
+                // Toggle sort direction
+                const currentDirection = this.getAttribute('data-direction') || 'asc';
+                const newDirection = currentDirection === 'asc' ? 'desc' : 'asc';
+                
+                // Update UI to show sort direction
+                document.querySelectorAll('.sortable').forEach(h => {
+                    h.removeAttribute('data-direction');
+                    h.querySelector('i').className = 'bi bi-arrow-down-up';
+                });
+                
+                this.setAttribute('data-direction', newDirection);
+                this.querySelector('i').className = newDirection === 'asc' ? 
+                    'bi bi-arrow-up' : 'bi bi-arrow-down';
+                
+                // Sort rows
+                rows.sort((a, b) => {
+                    let aValue, bValue;
+                    const aCell = a.querySelector(`td:nth-child(${this.cellIndex + 1})`);
+                    const bCell = b.querySelector(`td:nth-child(${this.cellIndex + 1})`);
+                    
+                    if (sortBy === 'hours') {
+                        aValue = parseFloat(aCell.textContent);
+                        bValue = parseFloat(bCell.textContent);
+                    } else {
+                        aValue = aCell.textContent.trim();
+                        bValue = bCell.textContent.trim();
+                    }
+                    
+                    if (newDirection === 'asc') {
+                        return aValue > bValue ? 1 : -1;
+                    } else {
+                        return aValue < bValue ? 1 : -1;
+                    }
+                });
+                
+                // Reorder rows
+                rows.forEach(row => tbody.appendChild(row));
+            });
+        });
+    });
+</script>
+{% endblock %}
